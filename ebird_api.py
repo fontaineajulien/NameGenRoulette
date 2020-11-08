@@ -1,35 +1,33 @@
+from ebird.api import get_taxonomy
 
-from ebird.api import get_taxonomy, get_taxonomy_forms, get_taxonomy_versions
-from tokens import get_creds
+INVALID_CHARS = [" ", "-", ","]
 
-def get_bird_names():
-	creds = get_creds()
-	taxonomy = get_taxonomy(creds['api_key'])
-	prev_name = ''
-	bird_list = []
 
-	for bird in taxonomy:
-		name = ''
-		try:
-			name = bird['familyComName']
-			try:
-				name = name.split(' ')[-1]
-			except:
-				pass
-			try:
-				name = name.split('-')[-1]
-			except:
-				pass
-			try:
-				name = name.split(',')[-1]
-			except:
-				pass
-			if name[-1] == 's':
-				name = name[:-1]
-			if prev_name != name:
-				prev_name = name
-				bird_list.append(name)
-		except:
-			pass
-	return bird_list
+def is_name_valid(name: str) -> bool:
+    for char in INVALID_CHARS:
+        if char in name:
+            return False
+    return True
 
+
+def get_rid_of_s(name: str) -> str:
+    if name[-1] == 's':
+        return name[:-1]
+    else:
+        return name
+
+    
+def without_duplicate(x: list) -> list:
+    return list(set(x))
+
+
+def get_bird_names() -> list:
+    taxonomy = get_taxonomy()
+    bird_list = []
+    for element in taxonomy:
+        if "familyComName" in element:
+            name = element["familyComName"]
+            if is_name_valid(name):
+                name = get_rid_of_s(name)
+                bird_list.append(name)
+    return without_duplicate(bird_list)
